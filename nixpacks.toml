@@ -1,6 +1,8 @@
-# Ensures Python is available during the build so that any native module
-# (e.g. better-sqlite3's node-gyp fallback) can compile if a prebuilt
-# binary isn't used. See: server has been failing on Railway with
-# "gyp ERR! find Python" because the default build image has no python3.
+# Nixpacks setup phase. IMPORTANT: this replaces (not merges with) the
+# auto-detected setup phase, so Node.js must be listed explicitly here
+# alongside python3 -- omitting it previously wiped out npm/node entirely
+# ("npm: command not found"). python3 is needed so node-gyp can compile
+# better-sqlite3's native module if its bundled prebuilt binary isn't used
+# for any reason (Railway build previously failed with "gyp ERR! find Python").
 [phases.setup]
-nixPkgs = ["python3"]
+nixPkgs = ["nodejs_22", "python3"]
