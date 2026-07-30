@@ -1,0 +1,6 @@
+# Ensures Python is available during the build so that any native module
+# (e.g. better-sqlite3's node-gyp fallback) can compile if a prebuilt
+# binary isn't used. See: server has been failing on Railway with
+# "gyp ERR! find Python" because the default build image has no python3.
+[phases.setup]
+nixPkgs = ["python3"]
