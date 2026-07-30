@@ -1,12 +1,35 @@
 // Servision Scout — backend
 // Node.js + Express + better-sqlite3
 
+const fs = require('fs');
 const path = require('path');
 const express = require('express');
 const Database = require('better-sqlite3');
 
+process.on('uncaughtException', (err) => {
+  console.error('FATAL uncaughtException:', err);
+  process.exit(1);
+});
+process.on('unhandledRejection', (err) => {
+  console.error('FATAL unhandledRejection:', err);
+  process.exit(1);
+});
+
 const PORT = process.env.PORT || 3000;
 const DB_PATH = process.env.DB_PATH || path.join(__dirname, 'scout.db');
+
+// Make sure the directory for DB_PATH exists (e.g. a Railway volume mounted
+// at /data may not have the file yet, or the dir may not exist at all --
+// without this, opening the DB throws and the process dies before it can
+// ever bind to a port).
+const dbDir = path.dirname(DB_PATH);
+try {
+  fs.mkdirSync(dbDir, { recursive: true });
+} catch (err) {
+  console.error(`Could not create DB directory ${dbDir}:`, err);
+}
+
+console.log(`Starting Servision Scout. DB_PATH=${DB_PATH} PORT=${PORT}`);
 
 const db = new Database(DB_PATH);
 db.pragma('journal_mode = WAL');
@@ -161,6 +184,11 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`Servision Scout listening on port ${PORT} (DB: ${DB_PATH})`);
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Servision Scout listening on 0.0.0.0:${PORT} (DB: ${DB_PATH})`);
+});
+
+server.on('error', (err) => {
+  console.error('FATAL server error:', err);
+  process.exit(1);
 });
